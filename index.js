@@ -59,6 +59,22 @@ module.exports = function flowRemoveTypes(source, options) {
     })
   }
 
+  var babylonPlugins = [ '*', 'jsx', 'flow' ];
+
+  var flowOptionsMapping = {
+    'esproposal_class_instance_fields': 'classProperties',
+    'esproposal_class_static_fields': 'classProperties',
+    'esproposal_export_star_as': 'exportExtensions',
+    'esproposal_decorators': 'decorators',
+  };
+
+  // Add the corresponding plugins for the requested flow options
+  Object.keys(flowOptionsMapping).forEach(function(flowOption) {
+    if (options[flowOption] || options[flowOptionsMapping[flowOption]]) {
+      babylonPlugins.push(flowOptionsMapping[flowOption]);
+    }
+  });
+
   // Babylon is one of the sources of truth for Flow syntax. This parse
   // configuration is intended to be as permissive as possible.
   var ast = babylon.parse(source, {
@@ -66,7 +82,7 @@ module.exports = function flowRemoveTypes(source, options) {
     allowReturnOutsideFunction: true,
     allowSuperOutsideMethod: true,
     sourceType: 'module',
-    plugins: [ '*', 'jsx', 'flow' ],
+    plugins: babylonPlugins,
   });
 
   visit(ast, removedNodes, removeFlowVisitor);
